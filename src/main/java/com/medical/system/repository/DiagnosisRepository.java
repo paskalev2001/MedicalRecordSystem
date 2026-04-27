@@ -7,4 +7,9 @@ import java.util.Optional;
 
 public interface DiagnosisRepository extends JpaRepository<Diagnosis, Long> {
     Optional<Diagnosis> findByName(String name);
+    Optional<Diagnosis> findByCode(String code);
+
+    boolean existsByName(String name);
+
+    boolean existsByCode(String code);
 }

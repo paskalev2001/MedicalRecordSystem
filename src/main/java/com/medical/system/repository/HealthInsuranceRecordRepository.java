@@ -14,4 +14,6 @@ public interface HealthInsuranceRecordRepository extends JpaRepository<HealthIns
             YearMonth startMonth,
             YearMonth endMonth
     );
+
+    List<HealthInsuranceRecord> findByPatientIdOrderByMonthDesc(Long patientId);
 }
