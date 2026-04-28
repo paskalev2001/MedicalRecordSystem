@@ -15,6 +15,7 @@ import com.medical.system.repository.ExaminationRepository;
 import com.medical.system.repository.PatientRepository;
 import com.medical.system.service.ExaminationService;
 import com.medical.system.service.HealthInsuranceRecordService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,6 +88,7 @@ public class ExaminationServiceImpl implements ExaminationService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('ADMIN') or @securityService.isCurrentPatient(#patientId)")
     public List<ExaminationResponse> getByPatientId(Long patientId) {
         return examinationRepository.findByPatientIdOrderByExaminationDateDesc(patientId)
                 .stream()
@@ -122,6 +124,7 @@ public class ExaminationServiceImpl implements ExaminationService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('ADMIN') or @securityService.isExaminationDoctor(#id)")
     public ExaminationResponse update(Long id, ExaminationRequest request) {
         Examination examination = findExaminationById(id);
 
