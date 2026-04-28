@@ -1,0 +1,188 @@
+package com.medical.system.service.impl;
+
+import com.medical.system.dto.examination.ExaminationRequest;
+import com.medical.system.dto.examination.ExaminationResponse;
+import com.medical.system.exception.ResourceNotFoundException;
+import com.medical.system.mapper.ExaminationMapper;
+import com.medical.system.model.entity.Diagnosis;
+import com.medical.system.model.entity.Doctor;
+import com.medical.system.model.entity.Examination;
+import com.medical.system.model.entity.Patient;
+import com.medical.system.model.enums.PaymentType;
+import com.medical.system.repository.DiagnosisRepository;
+import com.medical.system.repository.DoctorRepository;
+import com.medical.system.repository.ExaminationRepository;
+import com.medical.system.repository.PatientRepository;
+import com.medical.system.service.ExaminationService;
+import com.medical.system.service.HealthInsuranceRecordService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@Service
+public class ExaminationServiceImpl implements ExaminationService {
+
+    private final ExaminationRepository examinationRepository;
+    private final DoctorRepository doctorRepository;
+    private final PatientRepository patientRepository;
+    private final DiagnosisRepository diagnosisRepository;
+    private final HealthInsuranceRecordService healthInsuranceRecordService;
+    private final ExaminationMapper examinationMapper;
+
+    public ExaminationServiceImpl(
+            ExaminationRepository examinationRepository,
+            DoctorRepository doctorRepository,
+            PatientRepository patientRepository,
+            DiagnosisRepository diagnosisRepository,
+            HealthInsuranceRecordService healthInsuranceRecordService,
+            ExaminationMapper examinationMapper
+    ) {
+        this.examinationRepository = examinationRepository;
+        this.doctorRepository = doctorRepository;
+        this.patientRepository = patientRepository;
+        this.diagnosisRepository = diagnosisRepository;
+        this.healthInsuranceRecordService = healthInsuranceRecordService;
+        this.examinationMapper = examinationMapper;
+    }
+
+    @Override
+    @Transactional
+    public ExaminationResponse create(ExaminationRequest request) {
+        Doctor doctor = findDoctorById(request.doctorId());
+        Patient patient = findPatientById(request.patientId());
+        Diagnosis diagnosis = findDiagnosisById(request.diagnosisId());
+
+        PaymentType paymentType = determinePaymentType(patient);
+
+        Examination examination = examinationMapper.toEntity(
+                request,
+                doctor,
+                patient,
+                diagnosis,
+                paymentType
+        );
+
+        Examination savedExamination = examinationRepository.save(examination);
+
+        return examinationMapper.toResponse(savedExamination);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExaminationResponse getById(Long id) {
+        Examination examination = findExaminationById(id);
+        return examinationMapper.toResponse(examination);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ExaminationResponse> getAll() {
+        return examinationRepository.findAll()
+                .stream()
+                .map(examinationMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ExaminationResponse> getByPatientId(Long patientId) {
+        return examinationRepository.findByPatientIdOrderByExaminationDateDesc(patientId)
+                .stream()
+                .map(examinationMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ExaminationResponse> getByDoctorId(Long doctorId) {
+        return examinationRepository.findByDoctorIdOrderByExaminationDateDesc(doctorId)
+                .stream()
+                .map(examinationMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ExaminationResponse> getByDoctorAndPeriod(
+            Long doctorId,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        return examinationRepository.findByDoctorIdAndExaminationDateBetween(
+                        doctorId,
+                        startDate,
+                        endDate
+                )
+                .stream()
+                .map(examinationMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public ExaminationResponse update(Long id, ExaminationRequest request) {
+        Examination examination = findExaminationById(id);
+
+        Doctor doctor = findDoctorById(request.doctorId());
+        Patient patient = findPatientById(request.patientId());
+        Diagnosis diagnosis = findDiagnosisById(request.diagnosisId());
+
+        PaymentType paymentType = determinePaymentType(patient);
+
+        examinationMapper.updateEntity(
+                examination,
+                request,
+                doctor,
+                patient,
+                diagnosis,
+                paymentType
+        );
+
+        Examination updatedExamination = examinationRepository.save(examination);
+
+        return examinationMapper.toResponse(updatedExamination);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        Examination examination = findExaminationById(id);
+        examinationRepository.delete(examination);
+    }
+
+    private PaymentType determinePaymentType(Patient patient) {
+        boolean insured = healthInsuranceRecordService.isPatientInsuredForLastSixMonths(patient);
+
+        return insured ? PaymentType.NHIF : PaymentType.PATIENT;
+    }
+
+    private Examination findExaminationById(Long id) {
+        return examinationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Examination not found with id: " + id
+                ));
+    }
+
+    private Doctor findDoctorById(Long id) {
+        return doctorRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Doctor not found with id: " + id
+                ));
+    }
+
+    private Patient findPatientById(Long id) {
+        return patientRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Patient not found with id: " + id
+                ));
+    }
+
+    private Diagnosis findDiagnosisById(Long id) {
+        return diagnosisRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Diagnosis not found with id: " + id
+                ));
+    }
+}

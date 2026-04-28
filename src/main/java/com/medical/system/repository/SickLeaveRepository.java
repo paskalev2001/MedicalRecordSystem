@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface SickLeaveRepository extends JpaRepository<SickLeave, Long> {
 
@@ -14,4 +15,8 @@ public interface SickLeaveRepository extends JpaRepository<SickLeave, Long> {
     List<SickLeave> findByExaminationDoctorId(Long doctorId);
 
     List<SickLeave> findByExaminationPatientId(Long patientId);
+
+    Optional<SickLeave> findByExaminationId(Long examinationId);
+
+    boolean existsByExaminationId(Long examinationId);
 }
