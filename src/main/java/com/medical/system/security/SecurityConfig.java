@@ -24,6 +24,10 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+
+                        .requestMatchers("/api/auth/me").authenticated()
+
                         .requestMatchers("/api/auth/**").permitAll()
 
                         // For H2 tests - possibly to revisit this implementation
