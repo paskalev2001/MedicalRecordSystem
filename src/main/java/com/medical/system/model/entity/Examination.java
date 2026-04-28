@@ -17,7 +17,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 
-public class Examination {
+public class Examination extends BaseEntity{
 
     @NotNull
     @Column(nullable = false)

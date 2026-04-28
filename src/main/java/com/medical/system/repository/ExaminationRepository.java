@@ -36,14 +36,14 @@ public interface ExaminationRepository extends JpaRepository<Examination, Long> 
     @Query("""
             SELECT COALESCE(SUM(e.price), 0)
             FROM Examination e
-            WHERE e.paymentType = com.example.medicalrecord.model.enums.PaymentType.PATIENT
+            WHERE e.paymentType = com.medical.system.model.enums.PaymentType.PATIENT
             """)
     BigDecimal getTotalPaidByPatients();
 
     @Query("""
             SELECT COALESCE(SUM(e.price), 0)
             FROM Examination e
-            WHERE e.paymentType = com.example.medicalrecord.model.enums.PaymentType.PATIENT
+            WHERE e.paymentType = com.medical.system.model.enums.PaymentType.PATIENT
               AND e.doctor.id = :doctorId
             """)
     BigDecimal getTotalPaidByPatientsForDoctor(Long doctorId);
