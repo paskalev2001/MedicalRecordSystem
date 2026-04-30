@@ -9,7 +9,9 @@ import java.util.Optional;
 
 public interface PatientRepository extends JpaRepository<Patient, Long> {
     Optional<Patient> findByEgn(String egn);
+
     boolean existsByEgn(String egn);
+    boolean existsByUserId(Long userId);
 
     List<Patient> findByFullNameContainingIgnoreCase(String fullName);
 

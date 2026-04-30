@@ -28,6 +28,8 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/auth/me").authenticated()
 
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
                         .requestMatchers("/api/auth/**").permitAll()
 
                         // For H2 tests - possibly to revisit this implementation

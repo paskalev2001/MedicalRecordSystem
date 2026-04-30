@@ -7,9 +7,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DoctorRepository extends JpaRepository<Doctor, Long> {
+
     Optional<Doctor> findByUniqueIdentifier(String uniqueIdentifier);
 
     boolean existsByUniqueIdentifier(String uniqueIdentifier);
+
+    boolean existsByUserId(Long userId);
 
     List<Doctor> findByGeneralPractitionerTrue();
 
