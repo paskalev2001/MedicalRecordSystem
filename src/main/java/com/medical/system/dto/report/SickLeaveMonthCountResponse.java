@@ -1,8 +1,8 @@
 package com.medical.system.dto.report;
 
 public record SickLeaveMonthCountResponse(
-        int year,
-        int month,
+        Integer year,
+        Integer month,
         Long sickLeaveCount
 ) {
 }
