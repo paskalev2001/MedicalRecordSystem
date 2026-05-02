@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface DoctorRepository extends JpaRepository<Doctor, Long> {
 
     Optional<Doctor> findByUniqueIdentifier(String uniqueIdentifier);
+    Optional<Doctor> findByUserUsername(String username);
 
     boolean existsByUniqueIdentifier(String uniqueIdentifier);
 

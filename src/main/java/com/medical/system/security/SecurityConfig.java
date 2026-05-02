@@ -25,35 +25,40 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
-
                         .requestMatchers("/api/auth/me").authenticated()
 
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // CRUD for doctors, patients and diagnosis - Only the Admin can access
+                        .requestMatchers(HttpMethod.POST, "/api/doctors/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/doctors/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/doctors/**").hasRole("ADMIN")
 
-                        // For H2 tests - possibly to revisit this implementation
-                        // .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/patients/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/patients/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/patients/**").hasRole("ADMIN")
 
-                        .requestMatchers("/api/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/diagnoses/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/diagnoses/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/diagnoses/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.GET, "/api/doctors/**")
-                        .hasAnyRole("ADMIN", "DOCTOR", "PATIENT")
+                        .requestMatchers(HttpMethod.POST, "/api/health-insurance-records/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/health-insurance-records/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/health-insurance-records/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.GET, "/api/diagnoses/**")
-                        .hasAnyRole("ADMIN", "DOCTOR", "PATIENT")
 
-                        .requestMatchers(HttpMethod.POST, "/api/**")
-                        .hasAnyRole("ADMIN", "DOCTOR")
+                        // Examinations can be created and edited by the admin and doctor
+                        .requestMatchers(HttpMethod.POST, "/api/examinations/**").hasAnyRole("ADMIN", "DOCTOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/examinations/**").hasAnyRole("ADMIN", "DOCTOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/examinations/**").hasAnyRole("ADMIN", "DOCTOR")
 
-                        .requestMatchers(HttpMethod.PUT, "/api/**")
-                        .hasAnyRole("ADMIN", "DOCTOR")
+                        // Issuing Sick leaves for Admin and doctor
+                        .requestMatchers(HttpMethod.POST, "/api/sick-leaves/**").hasAnyRole("ADMIN", "DOCTOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/sick-leaves/**").hasAnyRole("ADMIN", "DOCTOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/sick-leaves/**").hasAnyRole("ADMIN", "DOCTOR")
 
-                        .requestMatchers(HttpMethod.DELETE, "/api/**")
-                        .hasRole("ADMIN")
-
-                        .requestMatchers("/api/**")
-                        .authenticated()
+                        //All can read their medical data
+                        .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("ADMIN", "DOCTOR", "PATIENT")
 
                         .anyRequest().authenticated()
                 )

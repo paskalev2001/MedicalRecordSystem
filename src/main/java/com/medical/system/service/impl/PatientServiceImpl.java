@@ -16,6 +16,7 @@ import com.medical.system.repository.UserRepository;
 import com.medical.system.service.PatientService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -61,6 +62,7 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or @securityService.isCurrentPatient(#id)")
     public PatientResponse getById(Long id) {
         Patient patient = findPatientById(id);
         return patientMapper.toResponse(patient);
@@ -68,6 +70,7 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
     public List<PatientResponse> getAll() {
         return patientRepository.findAll()
                 .stream()
@@ -77,6 +80,7 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
     public List<PatientResponse> getByGeneralPractitioner(Long doctorId) {
         return patientRepository.findByGeneralPractitionerId(doctorId)
                 .stream()

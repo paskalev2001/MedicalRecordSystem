@@ -11,6 +11,7 @@ import com.medical.system.repository.PatientRepository;
 import com.medical.system.service.HealthInsuranceRecordService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.time.YearMonth;
 import java.util.List;
@@ -45,6 +46,7 @@ public class HealthInsuranceRecordServiceImpl implements HealthInsuranceRecordSe
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or @securityService.canAccessHealthInsuranceRecord(#id)")
     public HealthInsuranceRecordResponse getById(Long id) {
         HealthInsuranceRecord record = findRecordById(id);
         return healthInsuranceRecordMapper.toResponse(record);
@@ -52,6 +54,7 @@ public class HealthInsuranceRecordServiceImpl implements HealthInsuranceRecordSe
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
     public List<HealthInsuranceRecordResponse> getAll() {
         return healthInsuranceRecordRepository.findAll()
                 .stream()
@@ -61,6 +64,7 @@ public class HealthInsuranceRecordServiceImpl implements HealthInsuranceRecordSe
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or @securityService.isCurrentPatient(#patientId)")
     public List<HealthInsuranceRecordResponse> getByPatientId(Long patientId) {
         return healthInsuranceRecordRepository.findByPatientIdOrderByMonthDesc(patientId)
                 .stream()
@@ -70,6 +74,7 @@ public class HealthInsuranceRecordServiceImpl implements HealthInsuranceRecordSe
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or @securityService.isCurrentPatient(#id)")
     public HealthInsuranceRecordResponse update(Long id, HealthInsuranceRecordRequest request) {
         HealthInsuranceRecord record = findRecordById(id);
         Patient patient = findPatientById(request.patientId());

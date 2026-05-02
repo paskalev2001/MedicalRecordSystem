@@ -50,6 +50,7 @@ public class ExaminationServiceImpl implements ExaminationService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('DOCTOR') and @securityService.canCreateOrUpdateExamination(#request))")
     public ExaminationResponse create(ExaminationRequest request) {
         Doctor doctor = findDoctorById(request.doctorId());
         Patient patient = findPatientById(request.patientId());
@@ -72,6 +73,7 @@ public class ExaminationServiceImpl implements ExaminationService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or @securityService.canAccessExamination(#id)")
     public ExaminationResponse getById(Long id) {
         Examination examination = findExaminationById(id);
         return examinationMapper.toResponse(examination);
@@ -79,6 +81,7 @@ public class ExaminationServiceImpl implements ExaminationService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
     public List<ExaminationResponse> getAll() {
         return examinationRepository.findAll()
                 .stream()
@@ -88,7 +91,7 @@ public class ExaminationServiceImpl implements ExaminationService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasRole('ADMIN') or @securityService.isCurrentPatient(#patientId)")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or @securityService.isCurrentPatient(#patientId)")
     public List<ExaminationResponse> getByPatientId(Long patientId) {
         return examinationRepository.findByPatientIdOrderByExaminationDateDesc(patientId)
                 .stream()
@@ -98,6 +101,7 @@ public class ExaminationServiceImpl implements ExaminationService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
     public List<ExaminationResponse> getByDoctorId(Long doctorId) {
         return examinationRepository.findByDoctorIdOrderByExaminationDateDesc(doctorId)
                 .stream()
@@ -107,6 +111,7 @@ public class ExaminationServiceImpl implements ExaminationService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
     public List<ExaminationResponse> getByDoctorAndPeriod(
             Long doctorId,
             LocalDate startDate,
@@ -124,7 +129,10 @@ public class ExaminationServiceImpl implements ExaminationService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN') or @securityService.isExaminationDoctor(#id)")
+    @PreAuthorize("""
+        hasRole('ADMIN') or 
+        (hasRole('DOCTOR') and @securityService.isExaminationDoctor(#id) and @securityService.canCreateOrUpdateExamination(#request))
+        """)
     public ExaminationResponse update(Long id, ExaminationRequest request) {
         Examination examination = findExaminationById(id);
 
@@ -150,6 +158,7 @@ public class ExaminationServiceImpl implements ExaminationService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('DOCTOR') and @securityService.isExaminationDoctor(#id))")
     public void delete(Long id) {
         Examination examination = findExaminationById(id);
         examinationRepository.delete(examination);

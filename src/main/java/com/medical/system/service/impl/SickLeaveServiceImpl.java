@@ -12,6 +12,7 @@ import com.medical.system.repository.SickLeaveRepository;
 import com.medical.system.service.SickLeaveService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -34,6 +35,7 @@ public class SickLeaveServiceImpl implements SickLeaveService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
     public SickLeaveResponse create(SickLeaveRequest request) {
         Examination examination = findExaminationById(request.examinationId());
 
@@ -55,6 +57,7 @@ public class SickLeaveServiceImpl implements SickLeaveService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or @securityService.canAccessSickLeave(#id)")
     public SickLeaveResponse getById(Long id) {
         SickLeave sickLeave = findSickLeaveById(id);
         return sickLeaveMapper.toResponse(sickLeave);
@@ -89,6 +92,7 @@ public class SickLeaveServiceImpl implements SickLeaveService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('DOCTOR') and @securityService.isSickLeaveDoctor(#id))")
     public SickLeaveResponse update(Long id, SickLeaveRequest request) {
         SickLeave sickLeave = findSickLeaveById(id);
         Examination examination = findExaminationById(request.examinationId());
@@ -113,6 +117,7 @@ public class SickLeaveServiceImpl implements SickLeaveService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('DOCTOR') and @securityService.isSickLeaveDoctor(#id))")
     public void delete(Long id) {
         SickLeave sickLeave = findSickLeaveById(id);
 

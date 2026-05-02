@@ -12,6 +12,8 @@ public interface SickLeaveRepository extends JpaRepository<SickLeave, Long> {
 
     List<SickLeave> findByStartDateBetween(LocalDate startDate, LocalDate endDate);
 
+    Optional<SickLeave> findById(Long id);
+
     List<SickLeave> findByExaminationDoctorId(Long doctorId);
 
     List<SickLeave> findByExaminationPatientId(Long patientId);
