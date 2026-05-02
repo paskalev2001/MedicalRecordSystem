@@ -4,6 +4,7 @@ import com.medical.system.dto.healthinsurance.HealthInsuranceRecordRequest;
 import com.medical.system.dto.healthinsurance.HealthInsuranceRecordResponse;
 import com.medical.system.model.entity.Patient;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface HealthInsuranceRecordService {
@@ -20,5 +21,5 @@ public interface HealthInsuranceRecordService {
 
     void delete(Long id);
 
-    boolean isPatientInsuredForLastSixMonths(Patient patient);
+    boolean isPatientInsuredForLastSixMonths(Patient patient, LocalDate referenceDate);
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 
@@ -94,15 +95,15 @@ public class HealthInsuranceRecordServiceImpl implements HealthInsuranceRecordSe
 
     @Override
     @Transactional(readOnly = true)
-    public boolean isPatientInsuredForLastSixMonths(Patient patient) {
-        YearMonth currentMonth = YearMonth.now();
-        YearMonth startMonth = currentMonth.minusMonths(5);
+    public boolean isPatientInsuredForLastSixMonths(Patient patient, LocalDate referenceDate) {
+        YearMonth referenceMonth = YearMonth.from(referenceDate);
+        YearMonth startMonth = referenceMonth.minusMonths(5);
 
         List<HealthInsuranceRecord> records =
                 healthInsuranceRecordRepository.findByPatientAndMonthBetween(
                         patient,
                         startMonth,
-                        currentMonth
+                        referenceMonth
                 );
 
         return records.size() == 6

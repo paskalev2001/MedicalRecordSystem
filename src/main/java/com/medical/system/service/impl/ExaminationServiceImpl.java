@@ -56,7 +56,7 @@ public class ExaminationServiceImpl implements ExaminationService {
         Patient patient = findPatientById(request.patientId());
         Diagnosis diagnosis = findDiagnosisById(request.diagnosisId());
 
-        PaymentType paymentType = determinePaymentType(patient);
+        PaymentType paymentType = determinePaymentType(patient, request.examinationDate());
 
         Examination examination = examinationMapper.toEntity(
                 request,
@@ -140,7 +140,7 @@ public class ExaminationServiceImpl implements ExaminationService {
         Patient patient = findPatientById(request.patientId());
         Diagnosis diagnosis = findDiagnosisById(request.diagnosisId());
 
-        PaymentType paymentType = determinePaymentType(patient);
+        PaymentType paymentType = determinePaymentType(patient, request.examinationDate());
 
         examinationMapper.updateEntity(
                 examination,
@@ -164,8 +164,11 @@ public class ExaminationServiceImpl implements ExaminationService {
         examinationRepository.delete(examination);
     }
 
-    private PaymentType determinePaymentType(Patient patient) {
-        boolean insured = healthInsuranceRecordService.isPatientInsuredForLastSixMonths(patient);
+    private PaymentType determinePaymentType(Patient patient, LocalDate examinationDate) {
+        boolean insured = healthInsuranceRecordService.isPatientInsuredForLastSixMonths(
+                patient,
+                examinationDate
+        );
 
         return insured ? PaymentType.NHIF : PaymentType.PATIENT;
     }
