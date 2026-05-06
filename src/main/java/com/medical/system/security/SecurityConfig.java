@@ -10,6 +10,11 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
@@ -17,19 +22,25 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
+        http
+                .csrf(csrf -> csrf.disable())
+
+                .cors(Customizer.withDefaults())
+
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
                 .authorizeHttpRequests(auth -> auth
 
+                        // Много важно за CORS preflight requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/me").authenticated()
 
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // CRUD for doctors, patients and diagnosis - Only the Admin can access
                         .requestMatchers(HttpMethod.POST, "/api/doctors/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/doctors/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/doctors/**").hasRole("ADMIN")
@@ -46,32 +57,54 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/health-insurance-records/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/health-insurance-records/**").hasRole("ADMIN")
 
-
-                        // Examinations can be created and edited by the admin and doctor
                         .requestMatchers(HttpMethod.POST, "/api/examinations/**").hasAnyRole("ADMIN", "DOCTOR")
                         .requestMatchers(HttpMethod.PUT, "/api/examinations/**").hasAnyRole("ADMIN", "DOCTOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/examinations/**").hasAnyRole("ADMIN", "DOCTOR")
 
-                        // Issuing Sick leaves for Admin and doctor
                         .requestMatchers(HttpMethod.POST, "/api/sick-leaves/**").hasAnyRole("ADMIN", "DOCTOR")
                         .requestMatchers(HttpMethod.PUT, "/api/sick-leaves/**").hasAnyRole("ADMIN", "DOCTOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/sick-leaves/**").hasAnyRole("ADMIN", "DOCTOR")
 
-                        //All can read their medical data
                         .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("ADMIN", "DOCTOR", "PATIENT")
 
                         .anyRequest().authenticated()
                 )
 
                 .httpBasic(Customizer.withDefaults())
-
-                .formLogin(form -> form.disable())
-
-//                .cors(Customizer.withDefaults())
-//                .csrf(csrf -> csrf.disable())
-        ;
+                .formLogin(form -> form.disable());
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedMethods(List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE",
+                "OPTIONS"
+        ));
+        configuration.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "Origin"
+        ));
+
+        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+        // По-добре сложи /**, не само /api/**
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 
     @Bean
