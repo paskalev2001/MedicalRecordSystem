@@ -110,6 +110,21 @@ public class HealthInsuranceRecordServiceImpl implements HealthInsuranceRecordSe
                 && records.stream().allMatch(HealthInsuranceRecord::isInsured);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('PATIENT')")
+    public List<HealthInsuranceRecordResponse> getForCurrentPatient(String username) {
+        Patient patient = patientRepository.findByUserUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Patient profile not found for username: " + username
+                ));
+
+        return healthInsuranceRecordRepository.findByPatientIdOrderByMonthDesc(patient.getId())
+                .stream()
+                .map(healthInsuranceRecordMapper::toResponse)
+                .toList();
+    }
+
     private HealthInsuranceRecord findRecordById(Long id) {
         return healthInsuranceRecordRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(

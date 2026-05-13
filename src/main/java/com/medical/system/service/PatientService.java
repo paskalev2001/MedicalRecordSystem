@@ -15,6 +15,8 @@ public interface PatientService {
 
     List<PatientResponse> getByGeneralPractitioner(Long doctorId);
 
+    PatientResponse getCurrentPatient(String username);
+
     PatientResponse update(Long id, PatientRequest request);
 
     void delete(Long id);

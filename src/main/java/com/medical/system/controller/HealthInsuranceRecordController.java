@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -26,6 +27,15 @@ public class HealthInsuranceRecordController {
     ) {
         HealthInsuranceRecordResponse response = healthInsuranceRecordService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<List<HealthInsuranceRecordResponse>> getCurrentPatientHealthInsuranceRecords(
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(
+                healthInsuranceRecordService.getForCurrentPatient(authentication.getName())
+        );
     }
 
     @GetMapping("/{id}")

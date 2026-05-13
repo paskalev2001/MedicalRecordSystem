@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -26,6 +27,15 @@ public class SickLeaveController {
     ) {
         SickLeaveResponse response = sickLeaveService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<List<SickLeaveResponse>> getCurrentPatientSickLeaves(
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(
+                sickLeaveService.getForCurrentPatient(authentication.getName())
+        );
     }
 
     @GetMapping("/{id}")

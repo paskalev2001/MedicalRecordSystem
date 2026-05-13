@@ -164,6 +164,21 @@ public class ExaminationServiceImpl implements ExaminationService {
         examinationRepository.delete(examination);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('PATIENT')")
+    public List<ExaminationResponse> getForCurrentPatient(String username) {
+        Patient patient = patientRepository.findByUserUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Patient profile not found for username: " + username
+                ));
+
+        return examinationRepository.findByPatientIdOrderByExaminationDateDesc(patient.getId())
+                .stream()
+                .map(examinationMapper::toResponse)
+                .toList();
+    }
+
     private PaymentType determinePaymentType(Patient patient, LocalDate examinationDate) {
         boolean insured = healthInsuranceRecordService.isPatientInsuredForLastSixMonths(
                 patient,

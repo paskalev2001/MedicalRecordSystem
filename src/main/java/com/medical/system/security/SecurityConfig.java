@@ -33,7 +33,6 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Много важно за CORS preflight requests
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
@@ -101,7 +100,6 @@ public class SecurityConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-        // По-добре сложи /**, не само /api/**
         source.registerCorsConfiguration("/**", configuration);
 
         return source;

@@ -43,8 +43,6 @@ public class Examination extends BaseEntity{
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    // PATIENT, ако пациентът няма осигуровки
-    // NHIF, ако пациентът има осигуровки
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private PaymentType paymentType;

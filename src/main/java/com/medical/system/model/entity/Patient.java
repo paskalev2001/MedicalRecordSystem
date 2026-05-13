@@ -22,13 +22,11 @@ public class Patient extends BaseEntity{
     @Column(nullable = false, length = 120)
     private String fullName;
 
-    // ЕГН — 10 цифри
     @NotBlank
     @Pattern(regexp = "\\d{10}", message = "EGN must contain exactly 10 digits")
     @Column(nullable = false, unique = true, length = 10)
     private String egn;
 
-    // Всеки пациент е регистриран при личен лекар
     @ManyToOne(optional = false)
     @JoinColumn(name = "general_practitioner_id", nullable = false)
     private Doctor generalPractitioner;
@@ -37,7 +35,6 @@ public class Patient extends BaseEntity{
     @JoinColumn(name = "user_id", unique = true)
     private User user;
 
-    // Здравноосигурителен статус за последните 6 месеца
     @OneToMany(
             mappedBy = "patient",
             cascade = CascadeType.ALL,

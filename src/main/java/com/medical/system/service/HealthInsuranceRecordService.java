@@ -17,6 +17,8 @@ public interface HealthInsuranceRecordService {
 
     List<HealthInsuranceRecordResponse> getByPatientId(Long patientId);
 
+    List<HealthInsuranceRecordResponse> getForCurrentPatient(String username);
+
     HealthInsuranceRecordResponse update(Long id, HealthInsuranceRecordRequest request);
 
     void delete(Long id);

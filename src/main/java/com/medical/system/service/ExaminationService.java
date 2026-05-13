@@ -16,6 +16,8 @@ public interface ExaminationService {
 
     List<ExaminationResponse> getByPatientId(Long patientId);
 
+    List<ExaminationResponse> getForCurrentPatient(String username);
+
     List<ExaminationResponse> getByDoctorId(Long doctorId);
 
     List<ExaminationResponse> getByDoctorAndPeriod(

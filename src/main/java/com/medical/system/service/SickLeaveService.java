@@ -17,6 +17,8 @@ public interface SickLeaveService {
 
     List<SickLeaveResponse> getByPatientId(Long patientId);
 
+    List<SickLeaveResponse> getForCurrentPatient(String username);
+
     SickLeaveResponse update(Long id, SickLeaveRequest request);
 
     void delete(Long id);

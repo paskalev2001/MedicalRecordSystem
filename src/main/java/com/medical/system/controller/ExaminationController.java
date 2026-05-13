@@ -8,6 +8,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -28,6 +29,15 @@ public class ExaminationController {
     ) {
         ExaminationResponse response = examinationService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<List<ExaminationResponse>> getCurrentPatientExaminations(
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(
+                examinationService.getForCurrentPatient(authentication.getName())
+        );
     }
 
     @GetMapping("/{id}")

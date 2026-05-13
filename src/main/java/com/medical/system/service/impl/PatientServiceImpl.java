@@ -89,6 +89,18 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('PATIENT')")
+    public PatientResponse getCurrentPatient(String username) {
+        Patient patient = patientRepository.findByUserUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Patient profile not found for username: " + username
+                ));
+
+        return patientMapper.toResponse(patient);
+    }
+
+    @Override
     @Transactional
     public PatientResponse update(Long id, PatientRequest request) {
         Patient patient = findPatientById(id);

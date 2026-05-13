@@ -8,6 +8,8 @@ import com.medical.system.mapper.SickLeaveMapper;
 import com.medical.system.model.entity.Examination;
 import com.medical.system.model.entity.SickLeave;
 import com.medical.system.repository.ExaminationRepository;
+import com.medical.system.model.entity.Patient;
+import com.medical.system.repository.PatientRepository;
 import com.medical.system.repository.SickLeaveRepository;
 import com.medical.system.service.SickLeaveService;
 import org.springframework.stereotype.Service;
@@ -22,15 +24,18 @@ public class SickLeaveServiceImpl implements SickLeaveService {
     private final SickLeaveRepository sickLeaveRepository;
     private final ExaminationRepository examinationRepository;
     private final SickLeaveMapper sickLeaveMapper;
+    private final PatientRepository patientRepository;
 
     public SickLeaveServiceImpl(
             SickLeaveRepository sickLeaveRepository,
             ExaminationRepository examinationRepository,
-            SickLeaveMapper sickLeaveMapper
+            SickLeaveMapper sickLeaveMapper,
+            PatientRepository patientRepository
     ) {
         this.sickLeaveRepository = sickLeaveRepository;
         this.examinationRepository = examinationRepository;
         this.sickLeaveMapper = sickLeaveMapper;
+        this.patientRepository = patientRepository;
     }
 
     @Override
@@ -128,6 +133,21 @@ public class SickLeaveServiceImpl implements SickLeaveService {
         }
 
         sickLeaveRepository.delete(sickLeave);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('PATIENT')")
+    public List<SickLeaveResponse> getForCurrentPatient(String username) {
+        Patient patient = patientRepository.findByUserUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Patient profile not found for username: " + username
+                ));
+
+        return sickLeaveRepository.findByExaminationPatientId(patient.getId())
+                .stream()
+                .map(sickLeaveMapper::toResponse)
+                .toList();
     }
 
     private SickLeave findSickLeaveById(Long id) {

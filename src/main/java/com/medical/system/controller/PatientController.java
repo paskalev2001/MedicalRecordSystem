@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+
 
 import java.util.List;
 
@@ -24,6 +26,13 @@ public class PatientController {
     public ResponseEntity<PatientResponse> create(@Valid @RequestBody PatientRequest request) {
         PatientResponse response = patientService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<PatientResponse> getCurrentPatient(Authentication authentication) {
+        return ResponseEntity.ok(
+                patientService.getCurrentPatient(authentication.getName())
+        );
     }
 
     @GetMapping("/{id}")
