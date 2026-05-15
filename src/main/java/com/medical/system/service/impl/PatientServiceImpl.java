@@ -11,6 +11,7 @@ import com.medical.system.model.entity.Patient;
 import com.medical.system.model.entity.User;
 import com.medical.system.model.enums.Role;
 import com.medical.system.repository.DoctorRepository;
+import com.medical.system.repository.ExaminationRepository;
 import com.medical.system.repository.PatientRepository;
 import com.medical.system.repository.UserRepository;
 import com.medical.system.service.PatientService;
@@ -27,17 +28,20 @@ public class PatientServiceImpl implements PatientService {
     private final DoctorRepository doctorRepository;
     private final UserRepository userRepository;
     private final PatientMapper patientMapper;
+    private final ExaminationRepository examinationRepository;
 
     public PatientServiceImpl(
             PatientRepository patientRepository,
             DoctorRepository doctorRepository,
             UserRepository userRepository,
-            PatientMapper patientMapper
+            PatientMapper patientMapper,
+            ExaminationRepository examinationRepository
     ) {
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
         this.userRepository = userRepository;
         this.patientMapper = patientMapper;
+        this.examinationRepository = examinationRepository;
     }
 
     @Override
@@ -126,6 +130,13 @@ public class PatientServiceImpl implements PatientService {
     @Transactional
     public void delete(Long id) {
         Patient patient = findPatientById(id);
+
+        if (examinationRepository.existsByPatientId(id)) {
+            throw new BadRequestException(
+                    "Patient cannot be deleted because there are examinations for this patient."
+            );
+        }
+
         patientRepository.delete(patient);
     }
 

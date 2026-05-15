@@ -2,11 +2,13 @@ package com.medical.system.service.impl;
 
 import com.medical.system.dto.diagnosis.DiagnosisRequest;
 import com.medical.system.dto.diagnosis.DiagnosisResponse;
+import com.medical.system.exception.BadRequestException;
 import com.medical.system.exception.DuplicateResourceException;
 import com.medical.system.exception.ResourceNotFoundException;
 import com.medical.system.mapper.DiagnosisMapper;
 import com.medical.system.model.entity.Diagnosis;
 import com.medical.system.repository.DiagnosisRepository;
+import com.medical.system.repository.ExaminationRepository;
 import com.medical.system.service.DiagnosisService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +20,16 @@ public class DiagnosisServiceImpl implements DiagnosisService {
 
     private final DiagnosisRepository diagnosisRepository;
     private final DiagnosisMapper diagnosisMapper;
+    private final ExaminationRepository examinationRepository;
 
     public DiagnosisServiceImpl(
             DiagnosisRepository diagnosisRepository,
-            DiagnosisMapper diagnosisMapper
+            DiagnosisMapper diagnosisMapper,
+            ExaminationRepository examinationRepository
     ) {
         this.diagnosisRepository = diagnosisRepository;
         this.diagnosisMapper = diagnosisMapper;
+        this.examinationRepository = examinationRepository;
     }
 
     @Override
@@ -71,6 +76,13 @@ public class DiagnosisServiceImpl implements DiagnosisService {
     @Transactional
     public void delete(Long id) {
         Diagnosis diagnosis = findDiagnosisById(id);
+
+        if (examinationRepository.existsByDiagnosisId(id)) {
+            throw new BadRequestException(
+                    "Diagnosis cannot be deleted because it is used in examinations."
+            );
+        }
+
         diagnosisRepository.delete(diagnosis);
     }
 

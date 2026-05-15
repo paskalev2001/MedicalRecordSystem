@@ -2,6 +2,7 @@ package com.medical.system.service.impl;
 
 import com.medical.system.dto.examination.ExaminationRequest;
 import com.medical.system.dto.examination.ExaminationResponse;
+import com.medical.system.exception.BadRequestException;
 import com.medical.system.exception.ResourceNotFoundException;
 import com.medical.system.mapper.ExaminationMapper;
 import com.medical.system.model.entity.Diagnosis;
@@ -9,10 +10,7 @@ import com.medical.system.model.entity.Doctor;
 import com.medical.system.model.entity.Examination;
 import com.medical.system.model.entity.Patient;
 import com.medical.system.model.enums.PaymentType;
-import com.medical.system.repository.DiagnosisRepository;
-import com.medical.system.repository.DoctorRepository;
-import com.medical.system.repository.ExaminationRepository;
-import com.medical.system.repository.PatientRepository;
+import com.medical.system.repository.*;
 import com.medical.system.service.ExaminationService;
 import com.medical.system.service.HealthInsuranceRecordService;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,6 +29,7 @@ public class ExaminationServiceImpl implements ExaminationService {
     private final DiagnosisRepository diagnosisRepository;
     private final HealthInsuranceRecordService healthInsuranceRecordService;
     private final ExaminationMapper examinationMapper;
+    private final SickLeaveRepository sickLeaveRepository;
 
     public ExaminationServiceImpl(
             ExaminationRepository examinationRepository,
@@ -38,7 +37,8 @@ public class ExaminationServiceImpl implements ExaminationService {
             PatientRepository patientRepository,
             DiagnosisRepository diagnosisRepository,
             HealthInsuranceRecordService healthInsuranceRecordService,
-            ExaminationMapper examinationMapper
+            ExaminationMapper examinationMapper,
+            SickLeaveRepository sickLeaveRepository
     ) {
         this.examinationRepository = examinationRepository;
         this.doctorRepository = doctorRepository;
@@ -46,6 +46,7 @@ public class ExaminationServiceImpl implements ExaminationService {
         this.diagnosisRepository = diagnosisRepository;
         this.healthInsuranceRecordService = healthInsuranceRecordService;
         this.examinationMapper = examinationMapper;
+        this.sickLeaveRepository = sickLeaveRepository;
     }
 
     @Override
@@ -161,6 +162,13 @@ public class ExaminationServiceImpl implements ExaminationService {
     @PreAuthorize("hasRole('ADMIN') or (hasRole('DOCTOR') and @securityService.isExaminationDoctor(#id))")
     public void delete(Long id) {
         Examination examination = findExaminationById(id);
+
+        if (sickLeaveRepository.existsByExaminationId(id)) {
+            throw new BadRequestException(
+                    "Examination cannot be deleted because it has an issued sick leave. Delete the sick leave first."
+            );
+        }
+
         examinationRepository.delete(examination);
     }
 

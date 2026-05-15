@@ -40,6 +40,12 @@ public interface ExaminationRepository extends JpaRepository<Examination, Long> 
 
     List<Examination> findByPaymentType(PaymentType paymentType);
 
+    boolean existsByDoctorId(Long doctorId);
+
+    boolean existsByPatientId(Long patientId);
+
+    boolean existsByDiagnosisId(Long diagnosisId);
+
     @Query("""
             SELECT COALESCE(SUM(e.price), 0)
             FROM Examination e
@@ -125,4 +131,5 @@ public interface ExaminationRepository extends JpaRepository<Examination, Long> 
     List<DoctorRevenueResponse> findPaidByPatientsGroupedByDoctor(
             @Param("paymentType") PaymentType paymentType
     );
+
 }

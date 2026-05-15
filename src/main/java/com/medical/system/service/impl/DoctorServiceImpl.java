@@ -10,6 +10,8 @@ import com.medical.system.model.entity.Doctor;
 import com.medical.system.model.entity.User;
 import com.medical.system.model.enums.Role;
 import com.medical.system.repository.DoctorRepository;
+import com.medical.system.repository.ExaminationRepository;
+import com.medical.system.repository.PatientRepository;
 import com.medical.system.repository.UserRepository;
 import com.medical.system.service.DoctorService;
 import org.springframework.stereotype.Service;
@@ -23,15 +25,21 @@ public class DoctorServiceImpl implements DoctorService {
     private final DoctorRepository doctorRepository;
     private final UserRepository userRepository;
     private final DoctorMapper doctorMapper;
+    private final PatientRepository patientRepository;
+    private final ExaminationRepository examinationRepository;
 
     public DoctorServiceImpl(
             DoctorRepository doctorRepository,
             UserRepository userRepository,
-            DoctorMapper doctorMapper
+            DoctorMapper doctorMapper,
+            PatientRepository patientRepository,
+            ExaminationRepository examinationRepository
     ) {
         this.doctorRepository = doctorRepository;
         this.userRepository = userRepository;
         this.doctorMapper = doctorMapper;
+        this.patientRepository = patientRepository;
+        this.examinationRepository = examinationRepository;
     }
 
     @Override
@@ -93,6 +101,19 @@ public class DoctorServiceImpl implements DoctorService {
     @Transactional
     public void delete(Long id) {
         Doctor doctor = findDoctorById(id);
+
+        if (examinationRepository.existsByDoctorId(id)) {
+            throw new BadRequestException(
+                    "Doctor cannot be deleted because there are examinations performed by this doctor."
+            );
+        }
+
+        if (patientRepository.existsByGeneralPractitionerId(id)) {
+            throw new BadRequestException(
+                    "Doctor cannot be deleted because there are patients registered with this doctor as general practitioner."
+            );
+        }
+
         doctorRepository.delete(doctor);
     }
 

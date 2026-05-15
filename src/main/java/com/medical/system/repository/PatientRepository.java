@@ -22,6 +22,8 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
 
     List<Patient> findByGeneralPractitionerId(Long doctorId);
 
+    boolean existsByGeneralPractitionerId(Long doctorId);
+
     @Query("""
         SELECT new com.medical.system.dto.report.DoctorPatientCountResponse(
             d.id,
