@@ -10,6 +10,7 @@ import com.medical.system.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +24,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class DeleteProtectionTest {
 
     @Autowired
+    private DoctorService doctorService;
+
+    @Autowired
+    private PatientService patientService;
+
+    @Autowired
     private DiagnosisService diagnosisService;
+
+    @Autowired
+    private ExaminationService examinationService;
+
+    @Autowired
+    private SickLeaveRepository sickLeaveRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -41,15 +54,115 @@ class DeleteProtectionTest {
     private ExaminationRepository examinationRepository;
 
     @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
     void diagnosisUsedInExaminationShouldNotBeDeleted() {
-        User gpUser = userRepository.save(TestDataFactory.user("gp_delete_1", Role.DOCTOR));
-        User doctorUser = userRepository.save(TestDataFactory.user("doctor_delete_1", Role.DOCTOR));
-        User patientUser = userRepository.save(TestDataFactory.user("patient_delete_1", Role.PATIENT));
+        TestData data = createBasicMedicalData("DEL-DIAG");
+
+        examinationRepository.save(
+                TestDataFactory.examination(
+                        LocalDate.of(2026, 5, 2),
+                        data.doctor(),
+                        data.patient(),
+                        data.diagnosis(),
+                        PaymentType.PATIENT
+                )
+        );
+
+        assertThatThrownBy(() -> diagnosisService.delete(data.diagnosis().getId()))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Diagnosis cannot be deleted");
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void doctorWithExaminationsShouldNotBeDeleted() {
+        TestData data = createBasicMedicalData("DEL-DOC-EXAM");
+
+        examinationRepository.save(
+                TestDataFactory.examination(
+                        LocalDate.of(2026, 5, 2),
+                        data.doctor(),
+                        data.patient(),
+                        data.diagnosis(),
+                        PaymentType.PATIENT
+                )
+        );
+
+        assertThatThrownBy(() -> doctorService.delete(data.doctor().getId()))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Doctor cannot be deleted");
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void generalPractitionerWithRegisteredPatientsShouldNotBeDeleted() {
+        TestData data = createBasicMedicalData("DEL-GP");
+
+        assertThatThrownBy(() -> doctorService.delete(data.gp().getId()))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("patients registered");
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void patientWithExaminationsShouldNotBeDeleted() {
+        TestData data = createBasicMedicalData("DEL-PATIENT");
+
+        examinationRepository.save(
+                TestDataFactory.examination(
+                        LocalDate.of(2026, 5, 2),
+                        data.doctor(),
+                        data.patient(),
+                        data.diagnosis(),
+                        PaymentType.PATIENT
+                )
+        );
+
+        assertThatThrownBy(() -> patientService.delete(data.patient().getId()))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Patient cannot be deleted");
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void examinationWithSickLeaveShouldNotBeDeleted() {
+        TestData data = createBasicMedicalData("DEL-EXAM");
+
+        Examination examination = examinationRepository.save(
+                TestDataFactory.examination(
+                        LocalDate.of(2026, 5, 2),
+                        data.doctor(),
+                        data.patient(),
+                        data.diagnosis(),
+                        PaymentType.PATIENT
+                )
+        );
+
+        SickLeave sickLeave = TestDataFactory.sickLeave(examination);
+        sickLeaveRepository.save(sickLeave);
+
+        assertThatThrownBy(() -> examinationService.delete(examination.getId()))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Examination cannot be deleted");
+    }
+
+    private TestData createBasicMedicalData(String suffix) {
+        User gpUser = userRepository.save(
+                TestDataFactory.user("gp_" + suffix, Role.DOCTOR)
+        );
+
+        User doctorUser = userRepository.save(
+                TestDataFactory.user("doctor_" + suffix, Role.DOCTOR)
+        );
+
+        User patientUser = userRepository.save(
+                TestDataFactory.user("patient_" + suffix, Role.PATIENT)
+        );
 
         Doctor gp = doctorRepository.save(
                 TestDataFactory.doctor(
-                        "GP-DEL-001",
-                        "Dr. GP Delete",
+                        "GP-" + suffix,
+                        "Dr. GP " + suffix,
                         Specialty.GENERAL_PRACTITIONER,
                         true,
                         gpUser
@@ -58,8 +171,8 @@ class DeleteProtectionTest {
 
         Doctor doctor = doctorRepository.save(
                 TestDataFactory.doctor(
-                        "DOC-DEL-001",
-                        "Dr. Delete",
+                        "DOC-" + suffix,
+                        "Dr. Specialist " + suffix,
                         Specialty.CARDIOLOGY,
                         false,
                         doctorUser
@@ -68,29 +181,33 @@ class DeleteProtectionTest {
 
         Patient patient = patientRepository.save(
                 TestDataFactory.patient(
-                        "Delete Patient",
-                        "9303031111",
+                        "Patient " + suffix,
+                        generateEgnFromSuffix(suffix),
                         gp,
                         patientUser
                 )
         );
 
         Diagnosis diagnosis = diagnosisRepository.save(
-                TestDataFactory.diagnosis("DEL-001", "Delete Protection Diagnosis")
-        );
-
-        examinationRepository.save(
-                TestDataFactory.examination(
-                        LocalDate.of(2026, 5, 2),
-                        doctor,
-                        patient,
-                        diagnosis,
-                        PaymentType.PATIENT
+                TestDataFactory.diagnosis(
+                        "D-" + suffix,
+                        "Diagnosis " + suffix
                 )
         );
 
-        assertThatThrownBy(() -> diagnosisService.delete(diagnosis.getId()))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("Diagnosis cannot be deleted");
+        return new TestData(gp, doctor, patient, diagnosis);
+    }
+
+    private String generateEgnFromSuffix(String suffix) {
+        int number = Math.abs(suffix.hashCode() % 1_000_000);
+        return "94" + String.format("%08d", number).substring(0, 8);
+    }
+
+    private record TestData(
+            Doctor gp,
+            Doctor doctor,
+            Patient patient,
+            Diagnosis diagnosis
+    ) {
     }
 }
