@@ -13,12 +13,7 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
     Optional<Patient> findByEgn(String egn);
     Optional<Patient> findByUserUsername(String username);
 
-    boolean existsByEgn(String egn);
     boolean existsByUserId(Long userId);
-
-    List<Patient> findByFullNameContainingIgnoreCase(String fullName);
-
-    List<Patient> findByGeneralPractitioner(Doctor doctor);
 
     List<Patient> findByGeneralPractitionerId(Long doctorId);
 

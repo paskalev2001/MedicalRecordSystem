@@ -11,11 +11,7 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
     Optional<Doctor> findByUniqueIdentifier(String uniqueIdentifier);
     Optional<Doctor> findByUserUsername(String username);
 
-    boolean existsByUniqueIdentifier(String uniqueIdentifier);
-
     boolean existsByUserId(Long userId);
 
     List<Doctor> findByGeneralPractitionerTrue();
-
-    List<Doctor> findByFullNameContainingIgnoreCase(String fullName);
 }
